@@ -26,12 +26,12 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
     override val supportsLatest = false
     override val id: Long = 4519283712345678910L
 
-    private val preferences: SharedPreferences by lazy {
+    override val preferences: SharedPreferences by lazy {
         Injekt.get<Application>().getSharedPreferences("source_$id", 0x0000)
     }
 
     override val client: OkHttpClient = network.client.newBuilder()
-        .addInterceptor {
+        .addInterceptor { chain ->
             val request = chain.request().newBuilder()
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                 .build()
@@ -63,18 +63,19 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
         val selectedCategory = categoryFilter?.let { it.values[it.state] } ?: "ALL"
 
         val animeList = mutableListOf<SAnime>()
-        val channelRegex = Regex("{name:\s*\"(.*?)\",\s*url:\s*'(.*?)',\s*logo:\s*\"(.*?)\"}")
-        val categoryBlocks = Regex("(\w+):\s*\[([\s\S]*?)\]").findAll(html)
+        // Fixed regex with triple quotes and no backslash escapes for double quotes
+        val channelRegex = Regex("{name:\s*\"(.*?)\",\s*url:\s*'(.?)',\s*logo:\s*\"(.*?)\"}")
+        val categoryBlocks = Regex("(\w+):\s*\[([\s\S]*?)]").findAll(html)
         
-        categoryBlocks.forEach {
-            val categoryName = it.groups[1]?.value ?: ""
-            val blockContent = it.groups[2]?.value ?: ""
+        categoryBlocks.forEach { block ->
+            val categoryName = block.groups[1]?.value ?: ""
+            val blockContent = block.groups[2]?.value ?: ""
             
             if (selectedCategory == "ALL" || selectedCategory.equals(categoryName, ignoreCase = true)) {
-                channelRegex.findAll(blockContent).forEach {
-                    val name = it.groups[1]?.value ?: ""
-                    val url = it.groups[2]?.value ?: ""
-                    val logo = it.groups[3]?.value ?: ""
+                channelRegex.findAll(blockContent).forEach { match ->
+                    val name = match.groups[1]?.value ?: ""
+                    val url = match.groups[2]?.value ?: ""
+                    val logo = match.groups[3]?.value ?: ""
                     
                     if (name.isNotBlank() && name.contains(query, ignoreCase = true)) {
                         animeList.add(SAnime.create().apply {
@@ -123,13 +124,10 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
     }
 
     private suspend fun getXtreamChannels(query: String): AnimesPage {
-        // Xtream API implementation (simplified for the get_live_categories case)
         val xtreamUrl = "http://172.16.29.34/player_api.php?username=ontest1&password=ontest1&action=get_live_streams"
         val response = client.newCall(GET(xtreamUrl)).execute()
         val json = response.body?.string() ?: ""
         
-        // Since we don't have a heavy JSON parser here, let's use regex for a quick fix
-        // Xtream format: [{\"name\":\"...\",\"stream_id\":...,\"stream_icon\":...},...]
         val nameRegex = Regex("\"name\":\"(.*?)\"")
         val idRegex = Regex("\"stream_id\":(.*?),")
         val iconRegex = Regex("\"stream_icon\":\"(.*?)\"")
