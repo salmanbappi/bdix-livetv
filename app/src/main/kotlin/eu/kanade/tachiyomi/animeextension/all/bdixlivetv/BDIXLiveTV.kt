@@ -27,7 +27,7 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
     override val id: Long = 4519283712345678910L
 
     override val client: OkHttpClient = network.client.newBuilder()
-        .addInterceptor {
+        .addInterceptor { chain ->
             val request = chain.request().newBuilder()
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                 .build()
@@ -124,7 +124,7 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
         val json = response.body?.string() ?: ""
         
         val nameRegex = Regex("\"name\":\"(.*?)\"")
-        val idRegex = Regex("\"stream_id\":(.*?)\, ")
+        val idRegex = Regex("\"stream_id\":(.*?)\",")
         val iconRegex = Regex("\"stream_icon\":\"(.*?)\"")
         
         val names = nameRegex.findAll(json).toList()
