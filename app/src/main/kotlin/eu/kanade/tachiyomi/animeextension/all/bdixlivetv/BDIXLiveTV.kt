@@ -26,9 +26,8 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
     override val supportsLatest = false
     override val id: Long = 4519283712345678910L
 
-    override val preferences: SharedPreferences by lazy {
-        Injekt.get<Application>().getSharedPreferences("source_$id", 0x0000)
-    }
+    // The 'preferences' property is already defined in the Source base class
+    // We can access it directly.
 
     override val client: OkHttpClient = network.client.newBuilder()
         .addInterceptor { chain ->
@@ -63,9 +62,9 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
         val selectedCategory = categoryFilter?.let { it.values[it.state] } ?: "ALL"
 
         val animeList = mutableListOf<SAnime>()
-        // Fixed regex with triple quotes and no backslash escapes for double quotes
-        val channelRegex = Regex("{name:\s*\"(.*?)\",\s*url:\s*'(.?)',\s*logo:\s*\"(.*?)\"}")
-        val categoryBlocks = Regex("(\w+):\s*\[([\s\S]*?)]").findAll(html)
+        // Fixed regex using triple quotes and no backslash escapes for quotes inside
+        val channelRegex = Regex("""\{name:\s*\"(.*?)\",\s*url:\s*'(.?)',\s*logo:\s*\"(.*?)\"}""")
+        val categoryBlocks = Regex("""(\w+):\s*\[([\s\S]*?)]""").findAll(html)
         
         categoryBlocks.forEach { block ->
             val categoryName = block.groups[1]?.value ?: ""
@@ -128,9 +127,9 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
         val response = client.newCall(GET(xtreamUrl)).execute()
         val json = response.body?.string() ?: ""
         
-        val nameRegex = Regex("\"name\":\"(.*?)\"")
-        val idRegex = Regex("\"stream_id\":(.*?),")
-        val iconRegex = Regex("\"stream_icon\":\"(.*?)\"")
+        val nameRegex = Regex(""\"name\":\"(.*?)\"""")
+        val idRegex = Regex("""\"stream_id\":(.*?)\, """)
+        val iconRegex = Regex("""\"stream_icon\":\"(.*?)\"""")
         
         val names = nameRegex.findAll(json).toList()
         val ids = idRegex.findAll(json).toList()
