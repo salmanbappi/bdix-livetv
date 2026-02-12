@@ -5,7 +5,7 @@ plugins {
 }
 
 ext {
-    extVersionCode = 1007
+    extVersionCode = 1008
 }
 
 android {
