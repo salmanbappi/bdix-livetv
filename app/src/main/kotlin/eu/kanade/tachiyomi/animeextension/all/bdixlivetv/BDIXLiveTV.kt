@@ -44,14 +44,14 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
 
         val animeList = mutableListOf<SAnime>()
         
-        // The website structure has categories like SPORTS: [...], BANGLA: [...] 
+        // The website structure has categories like SPORTS: [...], BANGLA: [...]
         // We'll parse the entire 'channels' object or just match all entries
-        val channelRegex = Regex("{name:\s*\"(.*?)\",\s*url:\s*'(.?*)',\s*logo:\s*\"(.*?)\"}")
+        val channelRegex = Regex("""\{name:\s*"(.*?)",\s*url:\s*'(.*?)',\s*logo:\s*"(.*?)"\}""")
         
         // To handle categories, we might need to be more specific with the regex 
         // or just parse the categories block by block.
         // For now, let's extract the category blocks first.
-        val categoryBlocks = Regex("(\w+):\s*\[([\s\S]*?)]").findAll(html)
+        val categoryBlocks = Regex("""(\w+):\s*\[([\s\S]*?)\]""").findAll(html)
         
         categoryBlocks.forEach { block ->
             val categoryName = block.groups[1]?.value ?: ""
