@@ -61,7 +61,7 @@ android {
 
 dependencies {
     implementation project(":core")
-    implementation "androidx.preference:preference-ktx:1.2.1"
+    implementation libs.androidx.preference
     compileOnly libs.bundles.provided
     implementation libs.bundles.common
 }
