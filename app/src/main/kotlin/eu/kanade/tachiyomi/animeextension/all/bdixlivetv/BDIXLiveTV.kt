@@ -124,7 +124,7 @@ class BDIXLiveTV : Source(), ConfigurableAnimeSource {
         val json = response.body?.string() ?: ""
         
         val nameRegex = Regex("\"name\":\"(.*?)\"")
-        val idRegex = Regex("\"stream_id\":(.*?)\",")
+        val idRegex = Regex("\"stream_id\":(\d+)")
         val iconRegex = Regex("\"stream_icon\":\"(.*?)\"")
         
         val names = nameRegex.findAll(json).toList()
